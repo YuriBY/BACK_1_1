@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import { HTTP_STATUS, db } from ".";
 
 export const app = express();
@@ -6,7 +6,7 @@ export const app = express();
 const jsonBodyMiddlewear = express.json();
 app.use(jsonBodyMiddlewear);
 
-app.get("/courses/", (req, res) => {
+app.get("/courses/", (req: Request, res: Response) => {
   let foundCorsesQuery = db.courses;
   if (req.query.message) {
     foundCorsesQuery = foundCorsesQuery.filter(
@@ -16,7 +16,7 @@ app.get("/courses/", (req, res) => {
   res.send(foundCorsesQuery);
 });
 
-app.get("/courses/:id", (req, res) => {
+app.get("/courses/:id", (req: Request, res: Response) => {
   const foundCorses = db.courses.find((c) => c.id === +req.params.id);
   if (!foundCorses) {
     res.sendStatus(HTTP_STATUS.NOT_FOUND_404);
@@ -25,7 +25,7 @@ app.get("/courses/:id", (req, res) => {
   res.send(foundCorses);
 });
 
-app.post("/courses/", (req, res) => {
+app.post("/courses/", (req: Request, res: Response) => {
   if (!req.body.message) {
     res.send(HTTP_STATUS.BAD_REQUEST_400);
     return;
@@ -39,13 +39,13 @@ app.post("/courses/", (req, res) => {
   res.status(HTTP_STATUS.CREATED_201).send(newCourse);
 });
 
-app.delete("/courses/:id", (req, res) => {
+app.delete("/courses/:id", (req: Request, res: Response) => {
   db.courses = db.courses.filter((c) => c.id !== +req.params.id);
 
   res.status(HTTP_STATUS.NO_CONTENT_204);
 });
 
-app.put("/courses/:id", (req, res) => {
+app.put("/courses/:id", (req: Request, res: Response) => {
   if (!req.body.message) {
     res.send(HTTP_STATUS.BAD_REQUEST_400);
     return;
@@ -60,7 +60,10 @@ app.put("/courses/:id", (req, res) => {
   res.sendStatus(HTTP_STATUS.NO_CONTENT_204);
 });
 
-app.delete("/__test__/data", (req, res) => {
-  db.courses = [];
-  res.sendStatus(HTTP_STATUS.NO_CONTENT_204);
-});
+app.delete(
+  "/hometask_01/api/testing/all-data",
+  (req: Request, res: Response) => {
+    db.courses = [];
+    res.sendStatus(HTTP_STATUS.NO_CONTENT_204);
+  }
+);
