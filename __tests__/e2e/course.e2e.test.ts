@@ -4,7 +4,7 @@ import { app } from "../../src/setting";
 
 describe("/courses", () => {
   beforeAll(async () => {
-    await request(app).delete("/__test__/data");
+    await request(app).delete("/hometask_01/api/testing/all-data");
   });
 
   it("should return 200 and empty array", async () => {
