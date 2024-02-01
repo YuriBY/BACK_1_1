@@ -1,10 +1,33 @@
 import express, { Request, Response } from "express";
-import { AvailableResolutions, HTTP_STATUS, VideoTypes, videos } from ".";
+import { AvailableResolutions, HTTP_STATUS } from ".";
+import {
+  RequesWithParams,
+  Param,
+  RequesWithBody,
+  CreateVideoType,
+  ErrorType,
+  VideoTypes,
+  RequestWithBodyAndParams,
+  UpdateVideoType,
+} from "./models/models";
 
 export const app = express();
 
 const jsonBodyMiddlewear = express.json();
 app.use(jsonBodyMiddlewear);
+
+let videos: VideoTypes[] = [
+  {
+    id: 0,
+    title: "string",
+    author: "string",
+    canBeDownloaded: true,
+    minAgeRestriction: null,
+    createdAt: "2024-01-30T19:21:00.388Z",
+    publicationDate: "2024-01-30T19:21:00.388Z",
+    availableResolutions: ["P144"],
+  },
+];
 
 app.get("/videos", (req: Request, res: Response) => {
   res.send(videos);
@@ -14,29 +37,6 @@ app.delete("/testing/all-data", (req: Request, res: Response) => {
   videos.length = 0;
   res.sendStatus(HTTP_STATUS.NO_CONTENT_204);
 });
-
-type RequesWithParams<P> = Request<P, unknown, unknown, unknown>;
-
-type Param = {
-  id: number;
-};
-
-type RequesWithBody<B> = Request<unknown, B, unknown, unknown>;
-
-type CreateVideoType = {
-  title: string;
-  author: string;
-  availableResolutions?: typeof AvailableResolutions;
-};
-
-type ErrorMessageType = {
-  field: string;
-  message: string;
-};
-
-type ErrorType = {
-  Errormessage: ErrorMessageType[];
-};
 
 app.get("/videos/:id", (req: RequesWithParams<Param>, res: Response) => {
   const foundVideos = videos.find((c) => c.id === +req.params.id);
@@ -111,23 +111,117 @@ app.post("/videos", (req: RequesWithBody<CreateVideoType>, res: Response) => {
   res.status(HTTP_STATUS.CREATED_201).send(newVideo);
 });
 
-// app.delete("/courses/:id", (req: Request, res: Response) => {
-//   db.courses = db.courses.filter((c) => c.id !== +req.params.id);
+app.delete("/videos/:id", (req: RequesWithParams<Param>, res: Response) => {
+  const foundVideos = videos.find((c) => c.id === +req.params.id);
+  if (!foundVideos) {
+    res.sendStatus(HTTP_STATUS.NOT_FOUND_404);
+    return;
+  }
+  videos = videos.filter((c) => c.id !== +req.params.id);
+  res.send(HTTP_STATUS.NO_CONTENT_204);
+});
 
-//   res.status(HTTP_STATUS.NO_CONTENT_204);
-// });
+app.put(
+  "/videos/:id",
+  (req: RequestWithBodyAndParams<Param, UpdateVideoType>, res: Response) => {
+    const errors: ErrorType = {
+      Errormessage: [],
+    };
+    let {
+      title,
+      author,
+      availableResolutions,
+      canBeDownloaded,
+      minAgeRestriction,
+      publicationDate,
+    } = req.body as UpdateVideoType;
 
-// app.put("/courses/:id", (req: Request, res: Response) => {
-//   if (!req.body.message) {
-//     res.send(HTTP_STATUS.BAD_REQUEST_400);
-//     return;
-//   }
+    if (
+      !title ||
+      typeof title !== "string" ||
+      title.trim() ||
+      title.trim().length > 40
+    ) {
+      errors.Errormessage.push({ message: "Incorrect title", field: "title" });
+    }
 
-//   const foundCorses = db.courses.find((c) => c.id === +req.params.id);
-//   if (!foundCorses) {
-//     res.sendStatus(HTTP_STATUS.BAD_REQUEST_400);
-//     return;
-//   }
-//   foundCorses.message = req.body.message;
-//   res.sendStatus(HTTP_STATUS.NO_CONTENT_204);
-// });
+    if (
+      !author ||
+      typeof author !== "string" ||
+      author.trim() ||
+      author.trim().length > 20
+    ) {
+      errors.Errormessage.push({
+        message: "Incorrect author",
+        field: "author",
+      });
+    }
+
+    if (typeof canBeDownloaded !== "boolean") {
+      errors.Errormessage.push({
+        message: "Incorrect canBeDownloaded",
+        field: "canBeDownloaded",
+      });
+    }
+
+    if (minAgeRestriction !== null) {
+      if (
+        typeof minAgeRestriction !== "number" ||
+        minAgeRestriction > 18 ||
+        minAgeRestriction < 1
+      ) {
+        errors.Errormessage.push({
+          message: "Incorrect minAgeRestriction",
+          field: "minAgeRestriction",
+        });
+      }
+    }
+
+    if (typeof publicationDate !== "string") {
+      errors.Errormessage.push({
+        message: "Incorrect publicationDate",
+        field: "publicationDate",
+      });
+    }
+
+    if (availableResolutions.length === 0) {
+      errors.Errormessage.push({
+        message: "Put resolution",
+        field: "availableResolutions",
+      });
+    }
+
+    if (Array.isArray(availableResolutions)) {
+      availableResolutions.forEach((r) => {
+        if (!AvailableResolutions.includes(r)) {
+          errors.Errormessage.push({
+            message: "Incorrect resolution",
+            field: "availableResolutions",
+          });
+          return;
+        } else {
+          availableResolutions = [];
+        }
+      });
+    }
+
+    if (errors.Errormessage.length) {
+      res.sendStatus(HTTP_STATUS.BAD_REQUEST_400).send(errors);
+      return;
+    }
+
+    const foundVideos = videos.find((c) => c.id === +req.params.id);
+    if (!foundVideos) {
+      res.sendStatus(HTTP_STATUS.NOT_FOUND_404);
+      return;
+    }
+
+    foundVideos.author = author;
+    foundVideos.title = title;
+    foundVideos.availableResolutions = availableResolutions;
+    foundVideos.canBeDownloaded = canBeDownloaded;
+    foundVideos.minAgeRestriction = minAgeRestriction;
+    foundVideos.publicationDate = publicationDate;
+    res.sendStatus(HTTP_STATUS.NO_CONTENT_204);
+  }
+);
