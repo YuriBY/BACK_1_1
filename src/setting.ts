@@ -49,7 +49,7 @@ app.get("/videos/:id", (req: RequesWithParams<Param>, res: Response) => {
 
 app.post("/videos", (req: RequesWithBody<CreateVideoType>, res: Response) => {
   const errors: ErrorType = {
-    Errormessage: [],
+    errorsMessages: [],
   };
 
   let { title, author, availableResolutions } = req.body as CreateVideoType;
@@ -57,37 +57,41 @@ app.post("/videos", (req: RequesWithBody<CreateVideoType>, res: Response) => {
   if (
     !title ||
     typeof title !== "string" ||
-    title.trim() ||
+    !title.trim() ||
     title.trim().length > 40
   ) {
-    errors.Errormessage.push({ message: "Incorrect title", field: "title" });
+    errors.errorsMessages.push({ message: "Incorrect title", field: "title" });
   }
 
   if (
     !author ||
     typeof author !== "string" ||
-    author.trim() ||
+    !author.trim() ||
     author.trim().length > 20
   ) {
-    errors.Errormessage.push({ message: "Incorrect author", field: "author" });
+    errors.errorsMessages.push({
+      message: "Incorrect author",
+      field: "author",
+    });
   }
 
   if (Array.isArray(availableResolutions)) {
     availableResolutions.forEach((r) => {
       if (!AvailableResolutions.includes(r)) {
-        errors.Errormessage.push({
+        errors.errorsMessages.push({
           message: "Incorrect resolution",
           field: "availableResolutions",
         });
         return;
-      } else {
-        availableResolutions = [];
       }
+      // else {
+      //   availableResolutions = [];
+      // }
     });
   }
 
-  if (errors.Errormessage.length) {
-    res.sendStatus(HTTP_STATUS.BAD_REQUEST_400).send(errors);
+  if (errors.errorsMessages.length) {
+    res.status(HTTP_STATUS.BAD_REQUEST_400).send(errors);
     return;
   }
 
@@ -125,7 +129,7 @@ app.put(
   "/videos/:id",
   (req: RequestWithBodyAndParams<Param, UpdateVideoType>, res: Response) => {
     const errors: ErrorType = {
-      Errormessage: [],
+      errorsMessages: [],
     };
     let {
       title,
@@ -139,26 +143,29 @@ app.put(
     if (
       !title ||
       typeof title !== "string" ||
-      title.trim() ||
+      !title.trim() ||
       title.trim().length > 40
     ) {
-      errors.Errormessage.push({ message: "Incorrect title", field: "title" });
+      errors.errorsMessages.push({
+        message: "Incorrect title",
+        field: "title",
+      });
     }
 
     if (
       !author ||
       typeof author !== "string" ||
-      author.trim() ||
+      !author.trim() ||
       author.trim().length > 20
     ) {
-      errors.Errormessage.push({
+      errors.errorsMessages.push({
         message: "Incorrect author",
         field: "author",
       });
     }
 
     if (typeof canBeDownloaded !== "boolean") {
-      errors.Errormessage.push({
+      errors.errorsMessages.push({
         message: "Incorrect canBeDownloaded",
         field: "canBeDownloaded",
       });
@@ -170,7 +177,7 @@ app.put(
         minAgeRestriction > 18 ||
         minAgeRestriction < 1
       ) {
-        errors.Errormessage.push({
+        errors.errorsMessages.push({
           message: "Incorrect minAgeRestriction",
           field: "minAgeRestriction",
         });
@@ -178,14 +185,14 @@ app.put(
     }
 
     if (typeof publicationDate !== "string") {
-      errors.Errormessage.push({
+      errors.errorsMessages.push({
         message: "Incorrect publicationDate",
         field: "publicationDate",
       });
     }
 
     if (availableResolutions.length === 0) {
-      errors.Errormessage.push({
+      errors.errorsMessages.push({
         message: "Put resolution",
         field: "availableResolutions",
       });
@@ -194,19 +201,17 @@ app.put(
     if (Array.isArray(availableResolutions)) {
       availableResolutions.forEach((r) => {
         if (!AvailableResolutions.includes(r)) {
-          errors.Errormessage.push({
+          errors.errorsMessages.push({
             message: "Incorrect resolution",
             field: "availableResolutions",
           });
           return;
-        } else {
-          availableResolutions = [];
         }
       });
     }
 
-    if (errors.Errormessage.length) {
-      res.sendStatus(HTTP_STATUS.BAD_REQUEST_400).send(errors);
+    if (errors.errorsMessages.length) {
+      res.status(HTTP_STATUS.BAD_REQUEST_400).send(errors);
       return;
     }
 

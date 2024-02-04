@@ -15,7 +15,7 @@ export type VideoTypes = {
 export type RequesWithParams<P> = Request<P, unknown, unknown, unknown>;
 
 export type Param = {
-  id: number;
+  id: string;
 };
 
 export type RequesWithBody<B> = Request<unknown, B, unknown, unknown>;
@@ -23,7 +23,7 @@ export type RequesWithBody<B> = Request<unknown, B, unknown, unknown>;
 export type CreateVideoType = {
   title: string;
   author: string;
-  availableResolutions?: typeof AvailableResolutions;
+  availableResolutions: typeof AvailableResolutions;
 };
 
 export type RequestWithBodyAndParams<P, B> = Request<P, B, unknown, unknown>;
@@ -36,5 +36,5 @@ export type ErrorMessageType = {
 };
 
 export type ErrorType = {
-  Errormessage: ErrorMessageType[];
+  errorsMessages: ErrorMessageType[];
 };

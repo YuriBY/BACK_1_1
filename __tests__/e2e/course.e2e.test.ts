@@ -1,6 +1,7 @@
 import request from "supertest";
 import { HTTP_STATUS } from "../../src";
 import { app } from "../../src/setting";
+import { response } from "express";
 
 describe("/videos", () => {
   beforeAll(async () => {
@@ -17,7 +18,7 @@ describe("/videos", () => {
       .expect(HTTP_STATUS.NOT_FOUND_404);
   });
 
-  it("shouldn't create course with incorrect data", async () => {
+  it("shouldn't create video with incorrect data", async () => {
     await request(app)
       .post("/videos")
       .send({
@@ -26,5 +27,28 @@ describe("/videos", () => {
         availableResolutions: ["P144"],
       })
       .expect(HTTP_STATUS.BAD_REQUEST_400);
+  });
+
+  it("should create video with incorrect data", async () => {
+    const res = await request(app)
+      .post("/videos")
+      .send({
+        title: "some title",
+        author: "string",
+        availableResolutions: ["P144"],
+      })
+      .expect(HTTP_STATUS.CREATED_201);
+  });
+
+  it("shouldn't create video with incorrect title", async () => {
+    const res = await request(app)
+      .post("/videos")
+      .send({
+        title: null,
+        author: "string",
+        availableResolutions: ["P144", "P240", "P720"],
+      })
+      .expect(HTTP_STATUS.BAD_REQUEST_400);
+    console.log(res);
   });
 });
